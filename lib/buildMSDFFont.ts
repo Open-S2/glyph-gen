@@ -1,8 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { load } from 'opentype.js'
-// @ts-expect-error - no types
-import { buildFontGlyph } from '../build/Release/msdf-native'
+import { buildFontGlyph } from 'binding'
 import { createCanvas } from 'canvas'
 import sharp from 'sharp'
 import DatabaseConstructor from 'better-sqlite3'
@@ -168,27 +167,30 @@ async function drawFont (fontPath: string, db: Database): Promise<void> {
   const width = 1200
   const height = 580
   const canvas = createCanvas(width, height)
-  const context = canvas.getContext('2d')
+  // NOTE: not using the same context as the one in the binding
+  const context = canvas.getContext('2d') as unknown as CanvasRenderingContext2D
+  // @ts-expect-error - private property but I need to use it
   context.antialias = 'subpixel'
   context.fillStyle = 'white'
+  // @ts-expect-error - private property but I need to use it
   context.quality = 'best'
   context.fillRect(0, 0, width, height)
   // draw
   let path = font.getPath('The quick brown fox', 40, 80, 72)
   path.fill = '#1f272d'
-  path.draw(context as any)
+  path.draw(context)
   path = font.getPath('jumped over the lazy dog.', 40, 160, 72)
   path.fill = '#1f272d'
-  path.draw(context as any)
+  path.draw(context)
   path = font.getPath('THE QUICK BROWN FOX', 40, 300, 72)
   path.fill = '#1f272d'
-  path.draw(context as any)
+  path.draw(context)
   path = font.getPath('JUMPED OVER THE LAZY DOG.', 40, 380, 72)
   path.fill = '#1f272d'
-  path.draw(context as any)
+  path.draw(context)
   path = font.getPath('0123456789!"#$%&\'()*+,-./:;<=>?@', 40, 520, 72)
   path.fill = '#1f272d'
-  path.draw(context as any)
+  path.draw(context)
   // build buffer and store
   const buffer = canvas.toBuffer('image/png')
   const webp = await sharp(buffer).webp({ lossless: true }).toBuffer()
@@ -265,11 +267,12 @@ async function buildGlyphs (msdf: MSDF, counter: Counter, db: Database): Promise
   for (const glyph of glyphs) {
     log(`${++counter.count} / ${counter.total}`)
     const { path, unicode, dead } = glyph
+    let buffer = Buffer.alloc(0)
     // if a "dead" unicode, we skip the image
     if (!dead) {
       // STEP 1) BUILD AND CREATE METADATA
       // create the msdf or mtsdf
-      let { data, width, height, r, l, t, b, emSize } = buildFontGlyph(path, unicode, size, range, true)
+      let { data, width, height, r, l, t, b, emSize } = buildFontGlyph(path, unicode, size, range, 'mtsdf', false)
       r = round(r / emSize * extent)
       l = round(l / emSize * extent)
       t = round(t / emSize * extent)
@@ -278,7 +281,7 @@ async function buildGlyphs (msdf: MSDF, counter: Counter, db: Database): Promise
         // update height
         msdf.maxHeight = Math.max(height, msdf.maxHeight)
         // bufferize
-        data = Buffer.from(data)
+        buffer = Buffer.from(data)
         // update glyph information
         glyph.width = r - l // size * ceil(width / extent) = texture-width
         glyph.height = t - b // size * ceil(height / extent) = texture-height
@@ -312,7 +315,7 @@ async function buildGlyphs (msdf: MSDF, counter: Counter, db: Database): Promise
       meta.writeUInt16LE(glyphAdvanceWidth, 12)
 
       // bundle
-      const glyphBuffer = Buffer.concat([meta, data])
+      const glyphBuffer = Buffer.concat([meta, buffer])
       glyph.length = glyphBuffer.length
       // store
       //  Write to SQL ask key->unicode and value->glyphBuffer

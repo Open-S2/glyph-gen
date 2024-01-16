@@ -22,8 +22,7 @@ export type buildFontGlyphSpec = (
   code: number,
   size: number,
   range: number,
-  type: Type,
-  codeIsIndex: boolean
+  type: Type
 ) => MSDFResponse | EmptyObject
 export type buildSVGGlyphSpec = (
   svgPath: string,

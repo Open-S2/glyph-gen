@@ -25,8 +25,8 @@ Napi::Object buildFontGlyph(const Napi::CallbackInfo& info) {
   // create object
   Napi::Object obj = Napi::Object::New(env);
   // check input
-  if (info.Length() != 5) {
-    Napi::Error::New(env, "Expected eight arguments (fontPath, code, size, range, type)")
+  if (info.Length() != 6) {
+    Napi::Error::New(env, "Expected eight arguments (fontPath, code, size, range, type, codeIsIndex)")
         .ThrowAsJavaScriptException();
     return obj;
   }
@@ -55,6 +55,11 @@ Napi::Object buildFontGlyph(const Napi::CallbackInfo& info) {
         .ThrowAsJavaScriptException();
     return obj;
   }
+  if (!info[5].IsBoolean()) {
+    Napi::Error::New(env, "Expected the ninth argument to be a number (codeIsIndex)")
+        .ThrowAsJavaScriptException();
+    return obj;
+  }
 
   // https://github.com/Chlumsky/msdfgen/issues/119
   std::string font_path = info[0].As<Napi::String>().Utf8Value();
@@ -62,14 +67,14 @@ Napi::Object buildFontGlyph(const Napi::CallbackInfo& info) {
   float size = info[2].As<Napi::Number>().FloatValue();
   float range = info[3].As<Napi::Number>().FloatValue();
   std::string type = info[4].As<Napi::String>().Utf8Value();
+  bool code_is_index = info[5].As<Napi::Boolean>().Value();
 
   char font_path_arr[font_path.size() + 1];
   strcpy(font_path_arr, font_path.c_str());
 
   // https://github.com/Chlumsky/msdfgen/issues/117
 
-  GlyphIndex glyphIndex;
-  unicode_t unicode = (unsigned int) code;
+  GlyphIndex glyphIndex(code);
   double advance = 0;
 
   FreetypeHandle *ft = initializeFreetype();
@@ -80,11 +85,16 @@ Napi::Object buildFontGlyph(const Napi::CallbackInfo& info) {
       getFontMetrics(font_metrics, font);
 
       Shape shape;
-      getGlyphIndex(glyphIndex, font, unicode);
+      // usual case, code is a unicode
+      if (!code_is_index) {
+        unicode_t unicode = (unsigned int) code;
+        getGlyphIndex(glyphIndex, font, unicode);
+      }
       if (loadGlyph(shape, font, glyphIndex, &advance)) {
         shape.normalize();
         if (resolveShapeGeometry(shape)) {
           edgeColoringByDistance(shape, 3., 0.);
+          // edgeColoringSimple(shape, 3.);
           // grab data
           int shape_size = shape.contours.size();
           float lineHeight = font_metrics.lineHeight;
@@ -104,10 +114,12 @@ Napi::Object buildFontGlyph(const Napi::CallbackInfo& info) {
 
           int length, width, height;
 
+          Vector2 translate(-bounds.l, -bounds.b);
+          Projection projection(scale, translate);
           // depending upon type, build
           if (strcmp(type.c_str(), "mtsdf") == 0) {
             Bitmap<float, 4> mtsdf(glyph_width, glyph_height);
-            generateMTSDF(mtsdf, shape, range * 2., scale, Vector2(-bounds.l, -bounds.b));
+            generateMTSDF(mtsdf, shape, projection, range * 2.);
             width = mtsdf.width();
             height = mtsdf.height();
             length = 4 * width * height;
@@ -123,7 +135,7 @@ Napi::Object buildFontGlyph(const Napi::CallbackInfo& info) {
             }
           } else if (strcmp(type.c_str(), "msdf") == 0) {
             Bitmap<float, 3> msdf(glyph_width, glyph_height);
-            generateMSDF(msdf, shape, range * 2., scale, Vector2(-bounds.l, -bounds.b));
+            generateMSDF(msdf, shape, projection, range * 2.);
             width = msdf.width();
             height = msdf.height();
             length = 4 * width * height;
@@ -139,7 +151,7 @@ Napi::Object buildFontGlyph(const Napi::CallbackInfo& info) {
             }
           } else if (strcmp(type.c_str(), "psdf") == 0) {
             Bitmap<float, 1> psdf(glyph_width, glyph_height);
-            generatePseudoSDF(psdf, shape, range * 2., scale, Vector2(-bounds.l, -bounds.b));
+            generatePseudoSDF(psdf, shape, projection, range * 2.);
             width = psdf.width();
             height = psdf.height();
             length = 4 * width * height;
@@ -157,7 +169,7 @@ Napi::Object buildFontGlyph(const Napi::CallbackInfo& info) {
           } else {
             // sdf
             Bitmap<float, 1> msdf(glyph_width, glyph_height);
-            generateSDF(msdf, shape, range * 2., scale, Vector2(-bounds.l, -bounds.b));
+            generateSDF(msdf, shape, projection, range * 2.);
             width = msdf.width();
             height = msdf.height();
             length = 4 * width * height;
@@ -217,7 +229,7 @@ Napi::Object buildSVGGlyph(const Napi::CallbackInfo& info) {
   Napi::Object obj = Napi::Object::New(env);
   // check input
   if (info.Length() != 5) {
-    Napi::Error::New(env, "Expected eight arguments (iconPath, size, range, path_index, useAlpha)")
+    Napi::Error::New(env, "Expected eight arguments (iconPath, size, range, pathIndex, useAlpha)")
         .ThrowAsJavaScriptException();
     return obj;
   }
@@ -237,7 +249,7 @@ Napi::Object buildSVGGlyph(const Napi::CallbackInfo& info) {
     return obj;
   }
   if (!info[3].IsNumber()) {
-    Napi::Error::New(env, "Expected the fifth argument to be a number (path_index)")
+    Napi::Error::New(env, "Expected the fifth argument to be a number (pathIndex)")
         .ThrowAsJavaScriptException();
     return obj;
   }

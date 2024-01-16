@@ -1,16 +1,15 @@
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS glyph (
-    code INTEGER NOT NULL,
+    code TEXT NOT NULL,
     data blob
 );
 
 CREATE TABLE IF NOT EXISTS glyph_multi (
     name TEXT,
-    code INTEGER NOT NULL,
+    code TEXT NOT NULL,
     data blob
 );
-
 
 CREATE TABLE IF NOT EXISTS metadata (
     name TEXT,

@@ -65,6 +65,10 @@ cd build
 cmake ..
 # build
 make
+
+# install
+sudo make install
+# make sure it was stored in /usr/local/include/freetype2
 ```
 
 ### Skia
@@ -95,6 +99,10 @@ tools/install_dependencies.sh
 # Once you have generated your build files, run Ninja to compile and link Skia:
 ninja -C out/Release skia
 ```
+
+## Where to get all Noto fonts
+
+https://github.com/notofonts/notofonts.github.io/tree/main
 
 ## Special Language Support
 

@@ -9,8 +9,7 @@ const sdf = buildFontGlyph(
   0x41, // A
   32,
   6,
-  type,
-  false
+  type
 )
 
 // onvert sdf.data to png using sharp and save as sdf.png
@@ -22,9 +21,9 @@ const image = sharp(Buffer.from(sdf.data), {
   }
 })
 
-image.png().toBuffer()
+image.webp().toBuffer()
   .then((data) => {
-    fs.writeFileSync(`./test/features/glyphs/${type}.png`, data)
+    fs.writeFileSync(`./test/features/glyphs/${type}.webp`, data)
   })
   .catch((err) => {
     console.log(err)

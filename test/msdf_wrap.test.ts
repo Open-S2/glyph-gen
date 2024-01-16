@@ -9,8 +9,7 @@ describe('buildFontGlyph tests', async (): Promise<void> => {
       0x41, // A
       32,
       6,
-      'sdf',
-      false
+      'sdf'
     )
     const sdfu8 = new Uint8Array(sdf.data)
     // grab image to compare
@@ -25,8 +24,7 @@ describe('buildFontGlyph tests', async (): Promise<void> => {
       0x41, // A
       32,
       6,
-      'psdf',
-      false
+      'psdf'
     )
     const psdfu8 = new Uint8Array(psdf.data)
     // grab image to compare
@@ -41,8 +39,7 @@ describe('buildFontGlyph tests', async (): Promise<void> => {
       0x41, // A
       32,
       6,
-      'msdf',
-      false
+      'msdf'
     )
     const msdfu8 = new Uint8Array(msdf.data)
     // grab image to compare
@@ -57,8 +54,7 @@ describe('buildFontGlyph tests', async (): Promise<void> => {
       0x41, // A
       32,
       6,
-      'mtsdf',
-      false
+      'mtsdf'
     )
     const mtsdfu8 = new Uint8Array(mtsdf.data)
     // grab image to compare
