@@ -13,3 +13,5 @@ https://patents.google.com/patent/US20070097123A1/en
 1) insert data (font, icon, image) into a tmpStore
 2) process data ([mt]sdf, vector) technique defined in options
 3) from the tmpStore, ship to the storage technique defined in options
+
+2 GB limit for D1 cloudflare

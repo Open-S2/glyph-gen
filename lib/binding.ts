@@ -3,6 +3,8 @@ import msdfNative from '../build/Release/msdf-native'
 
 export type Type = 'sdf' | 'psdf' | 'msdf' | 'mtsdf'
 
+export type EmptyObject = Record<string, never>
+
 export interface MSDFResponse {
   data: ArrayBuffer
   width: number
@@ -20,15 +22,16 @@ export type buildFontGlyphSpec = (
   code: number,
   size: number,
   range: number,
-  type: Type
-) => MSDFResponse
+  type: Type,
+  codeIsIndex: boolean
+) => MSDFResponse | EmptyObject
 export type buildSVGGlyphSpec = (
   svgPath: string,
   size: number,
   range: number,
   pathIndex: number,
   type: Type
-) => MSDFResponse
+) => MSDFResponse | EmptyObject
 
 export const buildFontGlyph = msdfNative.buildFontGlyph as buildFontGlyphSpec
 export const buildSVGGlyph = msdfNative.buildSVGGlyph as buildSVGGlyphSpec

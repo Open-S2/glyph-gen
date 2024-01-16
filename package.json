@@ -17,8 +17,8 @@
     "svg-path-parser": "^1.1.0"
   },
   "scripts": {
-    "test": "vitest --watch=false --root=\"test\"",
-    "test:watch": "vitest --watch=true --root=\"test\"",
+    "test": "vitest --watch=false --config=\"./vitest.config.ts\"",
+    "test:watch": "vitest --watch=true --config=\"./vitest.config.ts\"",
     "lint": "eslint --ext .ts lib/ test/ --fix",
     "clean": "node-gyp clean",
     "ship": "npx wrangler@d1 d1 execute GLYPHS --file=./builtGlyphsTmp/merged.glyphs",

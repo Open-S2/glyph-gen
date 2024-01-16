@@ -110,6 +110,8 @@
     "skipLibCheck": false                                 /* Skip type checking all .d.ts files. */
   },
   "include": [
+    "vitest.config.ts",
+    "util/**/*.ts",
     "lib/**/*.ts",
     "test/**/*.ts"
   ],

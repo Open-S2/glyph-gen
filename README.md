@@ -76,17 +76,19 @@ python3 tools/git-sync-deps
 # If you are building for Apple Silicon (M1 and newer) instead, add a gn arg to set target_cpu="arm64"
 # Options:
 # MacOS: target_os="mac" target_cpu="arm64"
-# Ubuntu/Linux: target_os="linux" target_cpu="x64"
+# Ubuntu/Linux: target_os="linux" target_cpu="x64" (also remove clang args)
 # example script:
 ./bin/gn gen out/Release --args='
+    cc="clang" cxx="clang++"
     is_official_build=true
+    is_debug=false
     target_cpu="arm64"
     extra_cflags=[ "-fPIC", "-I/usr/local/include/freetype2" ]
     extra_cflags_cc=["-frtti"]
     skia_enable_tools=true skia_enable_skshaper=true
     skia_use_icu=false skia_use_sfntly=false skia_use_piex=true
-    skia_enable_skottie=true skia_use_freetype=true skia_use_harfbuzz=false
-    skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false
+    skia_enable_skottie=true skia_use_freetype=true skia_use_system_freetype2=true skia_use_harfbuzz=false
+    skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false skia_enable_skparagraph=true
     skia_enable_gpu=true'
 # If some header files are missing, install the corresponding dependencies:
 tools/install_dependencies.sh
