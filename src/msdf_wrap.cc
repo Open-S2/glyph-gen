@@ -137,6 +137,23 @@ Napi::Object buildFontGlyph(const Napi::CallbackInfo& info) {
                 data[idx + 3] = 255;
               }
             }
+          } else if (strcmp(type.c_str(), "psdf") == 0) {
+            Bitmap<float, 1> psdf(glyph_width, glyph_height);
+            generatePseudoSDF(psdf, shape, range * 2., scale, Vector2(-bounds.l, -bounds.b));
+            width = psdf.width();
+            height = psdf.height();
+            length = 4 * width * height;
+            data = new byte[length];
+            for (int y = 0; y < height; y++) {
+              for (int x = 0; x < width; x++) {
+                size_t idx = (width * y + x) << 2;
+                auto pixel = pixelFloatToByte(psdf(x, y)[0]);
+                data[idx] = pixel;
+                data[idx + 1] = pixel;
+                data[idx + 2] = pixel;
+                data[idx + 3] = 255;
+              }
+            }
           } else {
             // sdf
             Bitmap<float, 1> msdf(glyph_width, glyph_height);

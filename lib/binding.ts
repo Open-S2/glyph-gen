@@ -1,6 +1,8 @@
 // @ts-expect-error - import from native module (it exists)
 import msdfNative from '../build/Release/msdf-native'
 
+export type Type = 'sdf' | 'psdf' | 'msdf' | 'mtsdf'
+
 export interface MSDFResponse {
   data: ArrayBuffer
   width: number
@@ -18,14 +20,14 @@ export type buildFontGlyphSpec = (
   code: number,
   size: number,
   range: number,
-  type: 'sdf' | 'msdf' | 'mtsdf'
+  type: Type
 ) => MSDFResponse
 export type buildSVGGlyphSpec = (
   svgPath: string,
   size: number,
   range: number,
   pathIndex: number,
-  type: 'sdf' | 'msdf' | 'mtsdf'
+  type: Type
 ) => MSDFResponse
 
 export const buildFontGlyph = msdfNative.buildFontGlyph as buildFontGlyphSpec

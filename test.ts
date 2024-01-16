@@ -4,7 +4,7 @@ import sharp from 'sharp'
 
 const sdf = buildFontGlyph(
   './test/features/fonts/Roboto/Roboto-Medium.ttf',
-  0x42, // A
+  0x41, // A
   32,
   6,
   'mtsdf'
