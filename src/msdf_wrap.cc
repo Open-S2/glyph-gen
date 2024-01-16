@@ -25,8 +25,8 @@ Napi::Object buildFontGlyph(const Napi::CallbackInfo& info) {
   // create object
   Napi::Object obj = Napi::Object::New(env);
   // check input
-  if (info.Length() != 5) {
-    Napi::Error::New(env, "Expected eight arguments (fontPath, code, size, range, type)")
+  if (info.Length() != 6) {
+    Napi::Error::New(env, "Expected six arguments (fontPath, code, size, range, type, codeIsIndex)")
         .ThrowAsJavaScriptException();
     return obj;
   }
@@ -55,6 +55,11 @@ Napi::Object buildFontGlyph(const Napi::CallbackInfo& info) {
         .ThrowAsJavaScriptException();
     return obj;
   }
+  if (!info[5].IsBoolean()) {
+    Napi::Error::New(env, "Expected the ninth argument to be a number (codeIsIndex)")
+        .ThrowAsJavaScriptException();
+    return obj;
+  }
 
   // https://github.com/Chlumsky/msdfgen/issues/119
   std::string font_path = info[0].As<Napi::String>().Utf8Value();
@@ -62,6 +67,7 @@ Napi::Object buildFontGlyph(const Napi::CallbackInfo& info) {
   float size = info[2].As<Napi::Number>().FloatValue();
   float range = info[3].As<Napi::Number>().FloatValue();
   std::string type = info[4].As<Napi::String>().Utf8Value();
+  bool code_is_index = info[5].As<Napi::Boolean>().Value();
 
   char font_path_arr[font_path.size() + 1];
   strcpy(font_path_arr, font_path.c_str());
@@ -69,7 +75,6 @@ Napi::Object buildFontGlyph(const Napi::CallbackInfo& info) {
   // https://github.com/Chlumsky/msdfgen/issues/117
 
   GlyphIndex glyphIndex;
-  unicode_t unicode = (unsigned int) code;
   double advance = 0;
 
   FreetypeHandle *ft = initializeFreetype();
@@ -80,7 +85,9 @@ Napi::Object buildFontGlyph(const Napi::CallbackInfo& info) {
       getFontMetrics(font_metrics, font);
 
       Shape shape;
-      getGlyphIndex(glyphIndex, font, unicode);
+      // if code is index, directly setup, otherwise find index from unicode value
+      if (code_is_index) glyphIndex = GlyphIndex(code);
+      else getGlyphIndex(glyphIndex, font, (unicode_t) code);
       if (loadGlyph(shape, font, glyphIndex, &advance)) {
         shape.normalize();
         if (resolveShapeGeometry(shape)) {

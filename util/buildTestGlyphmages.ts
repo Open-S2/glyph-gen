@@ -9,7 +9,8 @@ const sdf = buildFontGlyph(
   0x41, // A
   32,
   6,
-  type
+  type,
+  false
 )
 
 // onvert sdf.data to png using sharp and save as sdf.png
