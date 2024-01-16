@@ -1,0 +1,44 @@
+{
+  "name": "msdf-gpu",
+  "version": "1.2.0",
+  "main": "lib/index.js",
+  "dependencies": {
+    "@rgba-image/lanczos": "^0.1.0",
+    "better-sqlite3": "^8.0.1",
+    "canvas": "^2.11.2",
+    "fast-xml-parser": "^3.19.0",
+    "flow-bin": "^0.151.0",
+    "node-addon-api": "^7.0.0",
+    "opentype.js": "^1.3.3",
+    "pbf": "^3.2.1",
+    "pngjs": "^6.0.0",
+    "sharp": "^0.33.2",
+    "single-line-log": "^1.1.2",
+    "svg-path-parser": "^1.1.0"
+  },
+  "scripts": {
+    "test": "vitest --watch=false --root=\"test\"",
+    "test:watch": "vitest --watch=true --root=\"test\"",
+    "lint": "eslint --ext .ts lib/ test/ --fix",
+    "clean": "node-gyp clean",
+    "ship": "npx wrangler@d1 d1 execute GLYPHS --file=./builtGlyphsTmp/merged.glyphs",
+    "build": "node-gyp configure && CXXFLAGS=\"-frtti -I/usr/include/freetype2\" node-gyp build",
+    "build:node": "tsc -p tsconfig.json && cp ./lib/schema.sql ./dist/schema.sql"
+  },
+  "gypfile": true,
+  "author": "Craig O'Connor",
+  "license": "NOT LICENSED YET",
+  "description": "",
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.8",
+    "@types/opentype.js": "^1.3.8",
+    "@types/pngjs": "^6.0.4",
+    "@types/single-line-log": "^1.1.2",
+    "@types/svg-path-parser": "^1.1.6",
+    "eslint": "^8.46.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-config-standard-with-typescript": "^37.0.0",
+    "ts-standard": "^12.0.2",
+    "vitest": "^1.2.0"
+  }
+}

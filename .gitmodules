@@ -1,0 +1,6 @@
+[submodule "src/freetype2"]
+	path = src/freetype2
+	url = https://github.com/aseprite/freetype2
+[submodule "src/skia"]
+	path = src/skia
+	url = https://github.com/google/skia
