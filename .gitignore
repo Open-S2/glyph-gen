@@ -28,3 +28,4 @@ tmp-process-roboto-sdf.sqlite-wal
 *.sqlite3
 *.sqlite3-shm
 *.sqlite3-wal
+.DS_Store
