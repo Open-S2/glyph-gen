@@ -1,4 +1,4 @@
-const { buildIcons } = require('../lib/index.js')
+const { buildIcons } = require('../../lib/index.js')
 
 buildIcons({
   inputFolder: './icons/streets',

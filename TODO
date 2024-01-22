@@ -1,10 +1,10 @@
-[ ] - store schema code as text
+[x] - store schema code as text
 [ ] - Support font storage as folder with individual files inside
 [ ] - Support font storage as sql with strings as key
 [ ] - Support ranges like mapbox does it
-[ ] - Support glyphs that are a sum of unicodes (they are not unicodes themselves)
+[x] - Support glyphs that are a sum of unicodes (they are not unicodes themselves)
 [ ] - support sprite creation for icons
-[ ] - msdf_wrap.new is the better version but breaks the M2 chip o_O (how?)
+[ ] - parse fonts to include vector data for future loop & blinn support
 
 https://github.com/mapbox/node-fontnik
 https://github.com/mapbox/spritezero
@@ -15,3 +15,8 @@ https://patents.google.com/patent/US20070097123A1/en
 3) from the tmpStore, ship to the storage technique defined in options
 
 2 GB limit for D1 cloudflare
+
+// 1) PARSE FONTS with substitutions and glyph metadata/data
+// 2) store fonts as sql
+// 3) test stored sql
+// 4) build roboto + noto sans as regular and medium

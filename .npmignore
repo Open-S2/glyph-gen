@@ -16,3 +16,6 @@ builtGlyphs
 builtGlyphsV2
 builtGlyphsTmp
 lib
+tmp-process-roboto-sdf.sqlite
+tmp-process-roboto-sdf.sqlite-shm
+tmp-process-roboto-sdf.sqlite-wal

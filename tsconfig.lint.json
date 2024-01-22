@@ -111,6 +111,7 @@
   },
   "include": [
     "vitest.config.ts",
+    "buildScripts/**/*.ts",
     "util/**/*.ts",
     "lib/**/*.ts",
     "test/**/*.ts"

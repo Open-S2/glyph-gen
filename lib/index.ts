@@ -1,33 +1,34 @@
-import fs from 'fs'
+import { convertGlyphsToSDF } from './convert'
+import { processFont } from './process'
+import { serializeFont } from './storage'
 
+import type { Options as FontOptions, FontGlyphMap } from './process/font'
+import type { Options as SDFOptions } from './convert/sdf'
+import type { Options as SQLiteOptions } from './storage/sql'
+
+export * from './convert'
+export * from './process'
+export * from './storage'
 export * from './binding'
-
-export type Type = 'font' | 'svg' | 'image'
-
-export interface Data {
-  /** type of data being imported */
-  type: Type
-  /** path to the file (font, svg file or folder, image file or folder) */
-  path: string
-}
+export * from './substitutionTable'
 
 export interface Options {
-  /** name of the project */
   name: string
-  /** path to the output file */
-  out: string
-  /** path to the font files; Glyphs will be stored in order of the font order provided */
-  data: Data[]
-  /** if the font already exists, allow to "overwrite" any existing data */
-  overwrite?: boolean
-  /** Used by (M)(T)SDF options. extent of the font; defaults to 8_192 */
-  extent?: number
-  /** Used by (M)(T)SDF and sprite options. Size of the glyph image by height; Defaults to 32 */
-  size?: number
-  /** Used by (M)(T)SDF options. Range of the buffer around the glyph; defaults to 6 */
-  range?: number
+  processOptions: FontOptions
+  convertOptions: SDFOptions
+  storeOptions: SQLiteOptions
 }
 
-export default async function build (options: Options): Promise<void> {
-  // TODO: implement
+export async function generateGlyphs (options: Options): Promise<void> {
+  const { name, processOptions, convertOptions, storeOptions } = options
+  let fontGlyphMap: FontGlyphMap | undefined
+  // 1) process data whether it be a font, image, or svg
+  if ('fontPaths' in processOptions) fontGlyphMap = await processFont(name, processOptions)
+  // 2) convert glyphs to sdf, image, or vector as needed
+  if ('convertType' in convertOptions && fontGlyphMap !== undefined) convertGlyphsToSDF(fontGlyphMap, convertOptions)
+  // 3) store glyphs
+  if ('storeType' in storeOptions && storeOptions.storeType === 'SQL') {
+    if (fontGlyphMap !== undefined) serializeFont(name, fontGlyphMap, storeOptions)
+  }
+  console.log('\ndone')
 }

@@ -1,7 +1,7 @@
 const fs = require('fs')
 const Database = require('better-sqlite3')
 const log = require('single-line-log').stdout
-const schema = fs.readFileSync(__dirname + '/../lib/schema.sql', 'utf8')
+const schema = fs.readFileSync(__dirname + '../lib/schema.sql', 'utf8')
 
 // const BASE = 'http://localhost:8789/v1'
 const BASE = 'http://localhost:8781'
@@ -14,7 +14,7 @@ setup()
     for (const glyph of glyphs) await mergeGlyph(glyph)
   })
 
-async function mergeGlyph (glyph) {
+async function mergeGlyph (glyph): Promise<void> {
   const name = glyph.endsWith('font')
     ? glyph.split('.font')[0].split('/').pop()
     : glyph.split('.icon')[0].split('/').pop()
@@ -97,3 +97,8 @@ async function uploadGlyphs (name, code, data) {
       console.log('FAILED', err)
     })
 }
+
+// [[d1_databases]]
+// binding = "DB" # i.e. available in your Worker on env.DB
+// database_name = "GLYPHS_V2"
+// database_id = "02aa53f4-f07f-44dd-a5d8-90215d82d07b"

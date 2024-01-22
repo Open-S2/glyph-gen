@@ -1,7 +1,7 @@
 const fs = require('fs')
 const sharp = require('sharp')
 const Database = require('better-sqlite3')
-const schema = fs.readFileSync(__dirname + '/../lib/schema.sql', 'utf8')
+const schema = fs.readFileSync(__dirname + '../lib/schema.sql', 'utf8')
 
 // const db = new Database('buildTestOut/Roboto/RobotoRegular.font', { readonly: true })
 const db = new Database('./builtGlyphsV2/Noto/NotoSansRegular.font', { readonly: true })

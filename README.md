@@ -103,6 +103,7 @@ ninja -C out/Release skia
 ## Where to get all Noto fonts
 
 https://github.com/notofonts/notofonts.github.io/tree/main
+https://github.com/notofonts/noto-cjk
 
 ## Special Language Support
 
@@ -125,12 +126,12 @@ This module is not designed to handle RTL bidirectional or glyph shaping. To add
 [ ] [Javanese](https://learn.microsoft.com/en-us/typography/script-development/javanese)
 [ ] [Khmer](https://learn.microsoft.com/en-us/typography/script-development/khmer)
 [ ] [Lao](https://learn.microsoft.com/en-us/typography/script-development/lao)
-[ ] [Myanmar](https://learn.microsoft.com/en-us/typography/script-development/myanmar)
+[x] [Myanmar](https://learn.microsoft.com/en-us/typography/script-development/myanmar)
 [ ] [Sinhala](https://learn.microsoft.com/en-us/typography/script-development/sinhala)
 [ ] [Syric](https://learn.microsoft.com/en-us/typography/script-development/syriac)
 [ ] [Thaana](https://learn.microsoft.com/en-us/typography/script-development/thaana)
 [ ] [Thai](https://learn.microsoft.com/en-us/typography/script-development/thai)
-[ ] [Tibetan](https://learn.microsoft.com/en-us/typography/script-development/tibetan)
+[x] [Tibetan](https://learn.microsoft.com/en-us/typography/script-development/tibetan)
 
 ## Conceptual Fixes
 

@@ -17,13 +17,14 @@
     "svg-path-parser": "^1.1.0"
   },
   "scripts": {
-    "test": "vitest --watch=false --config=\"./vitest.config.ts\"",
+    "test": "pnpm run build:node && vitest --watch=false --config=\"./vitest.config.ts\"",
     "test:watch": "vitest --watch=true --config=\"./vitest.config.ts\"",
     "lint": "eslint --ext .ts lib/ test/ --fix",
     "clean": "node-gyp clean",
     "ship": "npx wrangler@d1 d1 execute GLYPHS --file=./builtGlyphsTmp/merged.glyphs",
-    "build": "node-gyp configure && CXXFLAGS=\"-frtti -I/usr/include/freetype2\" node-gyp build",
-    "build:node": "tsc -p tsconfig.json && cp ./lib/schema.sql ./dist/schema.sql"
+    "build": "pnpm run build:cpp && pnpm run build:node",
+    "build:cpp": "node-gyp configure && CXXFLAGS=\"-frtti -I/usr/include/freetype2\" node-gyp build",
+    "build:node": "rm -rf ./dist && mkdir ./dist && tsc -p tsconfig.json && cp ./lib/schema.sql ./dist/schema.sql"
   },
   "gypfile": true,
   "author": "Craig O'Connor",

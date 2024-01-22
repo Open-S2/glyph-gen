@@ -2,29 +2,23 @@ BEGIN;
 
 CREATE TABLE IF NOT EXISTS glyph (
     code TEXT NOT NULL,
-    data blob
+    data TEXT -- base64 encoded string of Uint8Array
 );
 
 CREATE TABLE IF NOT EXISTS glyph_multi (
     name TEXT,
     code TEXT NOT NULL,
-    data blob
+    data TEXT -- base64 encoded string of Uint8Array
 );
 
 CREATE TABLE IF NOT EXISTS metadata (
     name TEXT,
-    data blob
-);
-
-CREATE TABLE IF NOT EXISTS example_image (
-    name TEXT,
-    data blob
+    data TEXT -- base64 encoded string of Uint8Array
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS glyph_index ON glyph (code);
 CREATE UNIQUE INDEX IF NOT EXISTS glyph_multi_index ON glyph_multi (name, code);
 CREATE UNIQUE INDEX IF NOT EXISTS meta_index ON metadata (name);
-CREATE UNIQUE INDEX IF NOT EXISTS example_image_index ON example_image (name);
 
 CREATE VIEW IF NOT EXISTS glyphs AS
     SELECT

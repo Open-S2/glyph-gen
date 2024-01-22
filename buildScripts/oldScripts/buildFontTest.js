@@ -1,5 +1,5 @@
 // @flow
-const { buildFont } = require('../lib/index.js')
+const { buildFont } = require('../../lib/index.js')
 
 buildFont({
   name: 'RobotoRegular',

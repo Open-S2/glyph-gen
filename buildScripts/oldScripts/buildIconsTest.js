@@ -1,5 +1,5 @@
 const fs = require('fs')
-const { buildSVGGlyph } = require('../lib/binding.js')
+const { buildSVGGlyph } = require('../../lib/binding.js')
 const { PNG } = require('pngjs')
 
 const SVG_PATH = '/Users/craigoconnor/Documents/Projects/S2/msdf-gpu/icons/tesla/charger.svg'
