@@ -1,45 +1,55 @@
 import { stdout as log } from 'single-line-log'
-import { buildFontGlyph } from '../binding'
+import { buildFontGlyph, buildSVGGlyph } from '../binding'
+import { zigzag } from '../util/zigzag'
 
-import type { FontGlyphMap } from 'process/font'
+import type { GlyphMap } from '../process/index'
 
 export type SDF_TYPES = 'sdf' | 'psdf' | 'msdf' | 'mtsdf'
 
-export interface Options {
-  convertType: SDF_TYPES
+export interface SDFOptions {
+  /** type of SDF to convert to. Default is 'mtsdf' */
+  convertType?: SDF_TYPES
 }
 
-export function convertGlyphsToSDF (fontGlyphMap: FontGlyphMap, options: Options): void {
-  const { glyphs } = fontGlyphMap
+export function convertGlyphsToSDF (
+  glyphMap: GlyphMap,
+  options: SDFOptions,
+  consoleLog = false
+): void {
+  const { glyphs } = glyphMap
   const notDeadGlyphs = glyphs.filter((glyph) => !glyph.dead)
   const { length } = notDeadGlyphs
+  const convertType = options.convertType ?? 'mtsdf'
   let count = 0
-  console.log()
+  console.info('\nConverting glyphs to SDF...\n')
   for (const glyph of notDeadGlyphs) {
-    log(`${++count} / ${length}`)
+    if (consoleLog) log(`${++count} / ${length}`)
     // prep variables
     const { round } = Math
-    const { extent, size, range } = fontGlyphMap
-    const { dead, type, path } = glyph
+    const { extent, size, range } = glyphMap
+    const { dead, type, file } = glyph
     if (dead) continue
+    if (type === 'image') continue
     let buffer = Buffer.alloc(0)
     // STEP 1) BUILD AND CREATE METADATA
     // create the sdf, psdf, msdf or mtsdf
-    let { data, width, height, r, l, t, b, emSize } = buildFontGlyph(
-      path,
-      'unicode' in glyph ? glyph.unicode : glyph.code,
-      size,
-      range,
-      options.convertType,
-      type === 'substitution'
-    )
+    let { data, width, height, r, l, t, b, emSize } = (type === 'svg')
+      ? buildSVGGlyph(file, size, range, glyph.pathIndex + 1, convertType)
+      : buildFontGlyph(
+        file,
+        type === 'unicode' ? glyph.unicode : glyph.code,
+        size,
+        range,
+        convertType,
+        type === 'substitution'
+      )
     r = round(r / emSize * extent)
     l = round(l / emSize * extent)
     t = round(t / emSize * extent)
     b = round(b / emSize * extent)
     if (data !== undefined) {
     // update height
-      fontGlyphMap.maxHeight = Math.max(height, fontGlyphMap.maxHeight)
+      glyphMap.maxHeight = Math.max(height, glyphMap.maxHeight)
       // bufferize
       buffer = Buffer.from(data)
       // update glyph information
@@ -78,10 +88,7 @@ export function convertGlyphsToSDF (fontGlyphMap: FontGlyphMap, options: Options
     const glyphBuffer = Buffer.concat([meta, buffer])
     glyph.length = glyphBuffer.length
     // store the result into the glyph
+    glyph.imageBuffer = buffer
     glyph.glyphBuffer = glyphBuffer
   }
-}
-
-function zigzag (num: number): number {
-  return (num << 1) ^ (num >> 31)
 }

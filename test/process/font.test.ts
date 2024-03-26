@@ -2,7 +2,7 @@ import { test, expect } from 'vitest'
 import { processFont } from '../../dist'
 
 test('test processing a font', async (): Promise<void> => {
-  const data = await processFont('Roboto', {
+  const data = await processFont('robotoMedium', {
     fontPaths: ['./test/features/fonts/Roboto/Roboto-Medium.ttf'],
     extent: 8192,
     range: 6,
@@ -12,7 +12,7 @@ test('test processing a font', async (): Promise<void> => {
   const firstUnicodeGlyph = unicodeGlyphs[0]
   expect(firstUnicodeGlyph).toEqual({
     id: '0',
-    path: './test/features/fonts/Roboto/Roboto-Medium.ttf',
+    file: './test/features/fonts/Roboto/Roboto-Medium.ttf',
     dead: true,
     bbox: { x1: 0, x2: 0, y1: 0, y2: 0 },
     advanceWidth: 0,
@@ -24,6 +24,7 @@ test('test processing a font', async (): Promise<void> => {
     xOffset: -1,
     yOffset: -1,
     length: -1,
+    imageBuffer: Buffer.alloc(0),
     glyphBuffer: Buffer.alloc(0),
     type: 'unicode',
     unicode: 0
@@ -31,7 +32,7 @@ test('test processing a font', async (): Promise<void> => {
   const nonDeadUnicodeGlyph = unicodeGlyphs[10]
   expect(nonDeadUnicodeGlyph).toEqual({
     id: '39',
-    path: './test/features/fonts/Roboto/Roboto-Medium.ttf',
+    file: './test/features/fonts/Roboto/Roboto-Medium.ttf',
     dead: false,
     bbox: { x1: 328, x2: 1068, y1: 4080, y2: 6144 },
     advanceWidth: 1384,
@@ -43,6 +44,7 @@ test('test processing a font', async (): Promise<void> => {
     xOffset: -1,
     yOffset: -1,
     length: -1,
+    imageBuffer: Buffer.alloc(0),
     glyphBuffer: Buffer.alloc(0),
     type: 'unicode',
     unicode: 39
@@ -50,12 +52,12 @@ test('test processing a font', async (): Promise<void> => {
   const substitutionGlyphs = data.glyphs.filter(d => d.type === 'substitution')
   const firstSubstitutionGlyph = substitutionGlyphs[0]
   expect(firstSubstitutionGlyph).toEqual({
-    id: '102.102.105',
-    path: './test/features/fonts/Roboto/Roboto-Medium.ttf',
+    id: '65.769',
+    file: './test/features/fonts/Roboto/Roboto-Medium.ttf',
     dead: false,
-    bbox: { x1: 180, x2: 6732, y1: 0, y2: 6228 },
-    advanceWidth: 7308,
-    leftSideBearing: 45,
+    bbox: { x1: 72, x2: 5384, y1: 0, y2: 7384 },
+    advanceWidth: 5452,
+    leftSideBearing: 18,
     width: -1,
     height: -1,
     texWidth: -1,
@@ -63,8 +65,9 @@ test('test processing a font', async (): Promise<void> => {
     xOffset: -1,
     yOffset: -1,
     length: -1,
+    imageBuffer: Buffer.alloc(0),
     glyphBuffer: Buffer.alloc(0),
     type: 'substitution',
-    code: 446
+    code: 640
   })
 })

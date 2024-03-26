@@ -3,10 +3,9 @@ import path from 'path'
 import DatabaseConstructor from 'better-sqlite3'
 
 import type { Database } from 'better-sqlite3'
-import type { FontGlyphMap } from 'process/font'
-import type { SubstituteParsed } from '../process/font'
+import type { GlyphMap, SubstituteParsed } from '../process/index'
 
-export interface Options {
+export interface SQLiteOptions {
   /** Type of storage */
   storeType: 'SQL'
   /** Path to the sqlite database */
@@ -90,7 +89,29 @@ export interface Metadata {
 
 const schema = fs.readFileSync(path.join(__dirname, '../schema.sql'), 'utf8')
 
-export function serializeFont (name: string, font: FontGlyphMap, options: Options): void {
+export function storeGlyphsToSQL (
+  name: string,
+  map: GlyphMap,
+  options: SQLiteOptions,
+  consoleLog = false
+): void {
+  const { out, multi } = options
+  const serializeName = multi !== false ? name : undefined
+
+  const db = new DatabaseConstructor(out)
+  db.pragma('journal_mode = WAL')
+  db.exec(schema)
+
+  for (const glyph of map.glyphs) {
+    if (glyph.dead) continue
+    const { id, glyphBuffer } = glyph
+    serializeGlyph(db, id, glyphBuffer, serializeName)
+  }
+  serializeMetadata(db, map, multi !== false)
+  db.close()
+}
+
+export function serializeSVGs (name: string, font: GlyphMap, options: SQLiteOptions): void {
   const { out, multi } = options
   const serializeName = multi !== false ? name : undefined
 
@@ -111,10 +132,10 @@ export function serializeGlyph (db: Database, code: string, dataBuffer: Buffer, 
   const data = bufferToBase64(dataBuffer)
   //  Write to SQL ask key->unicode and value->glyphBuffer and if multi name->name
   if (name !== undefined) { // this means we want to store to glyph_multi
-    const writeGlyph = db.prepare('REPLACE INTO glyph_multi (name, code, data) VALUES (@name, @code, @data)')
+    const writeGlyph = db.prepare<{ name: string, code: string, data: string }>('REPLACE INTO glyph_multi (name, code, data) VALUES (@name, @code, @data)')
     writeGlyph.run({ name, code, data })
   } else {
-    const writeGlyph = db.prepare('REPLACE INTO glyph (code, data) VALUES (@code, @data)')
+    const writeGlyph = db.prepare<{ code: string, data: string }>('REPLACE INTO glyph (code, data) VALUES (@code, @data)')
     writeGlyph.run({ code, data })
   }
 }
@@ -139,8 +160,8 @@ export function getGlyph (db: Database, code: string, name?: string): undefined 
 // Buffer [metadata, glyphs]
 // metadata: size, maxHeight (largest height value), range, scale, name,
 // extent, glyphs
-export function serializeMetadata (db: Database, font: FontGlyphMap, multi: boolean): void {
-  const { name, extent, size, maxHeight, range, glyphs, defaultAdvance, substitutes } = font
+export function serializeMetadata (db: Database, map: GlyphMap, multi: boolean): void {
+  const { name, extent, size, maxHeight, range, glyphs, defaultAdvance } = map
 
   // build the glyph map
   const aliveGlyphs = glyphs.filter(g => !g.dead && g.type === 'unicode')
@@ -158,17 +179,53 @@ export function serializeMetadata (db: Database, font: FontGlyphMap, multi: bool
   // 1: component count (writeUInt8)
   // 2+: [repeating] component unicodes (writeUInt16LE)
   let subsBuf = Buffer.alloc(0)
-  for (const { code } of substitutes) {
-    const [type, count, ...codes] = code
-    // the first two numbers are 8bits, the rest are 16bits
-    const length = (code.length - 2) * 2 + 2
-    const buf = Buffer.alloc(length)
-    buf.writeUInt8(type, 0)
-    buf.writeUInt8(count, 1)
-    for (let i = 0; i < codes.length; i++) {
-      buf.writeUInt16LE(codes[i], i * 2 + 2)
+  if ('substitutes' in map) {
+    for (const { code } of map.substitutes) {
+      const [type, count, ...codes] = code
+      // the first two numbers are 8bits, the rest are 16bits
+      const length = (code.length - 2) * 2 + 2
+      const buf = Buffer.alloc(length)
+      buf.writeUInt8(type, 0)
+      buf.writeUInt8(count, 1)
+      for (let i = 0; i < codes.length; i++) {
+        buf.writeUInt16LE(codes[i], i * 2 + 2)
+      }
+      subsBuf = Buffer.concat([subsBuf, buf])
     }
-    subsBuf = Buffer.concat([subsBuf, buf])
+  }
+
+  // store iconMap
+  // nameLength, mapLength, name, [glyphID, colorID]
+  // [glyphCount (uint8), glyphID (uint16), colorID (uint16), glyphID (uint16), colorID (uint16), ...]
+  const iconMapBufs = []
+  if ('paths' in map) {
+    for (const [name, iconMap] of map.paths) { // { glyphID, colorID }
+      const buf = Buffer.alloc(name.length + iconMap.length * 4 + 2)
+      buf[0] = name.length
+      buf[1] = iconMap.length
+      // store name
+      for (let i = 0; i < name.length; i++) buf.writeUInt8(name.charCodeAt(i), i + 2)
+      // store positional data
+      for (let i = 0; i < iconMap.length; i++) {
+        const { glyphID, colorID } = iconMap[i]
+        const pos = name.length + (i * 4) + 2
+        buf.writeUInt16LE(glyphID, pos)
+        buf.writeUInt16LE(colorID, pos + 2)
+      }
+      iconMapBufs.push(buf)
+    }
+  }
+  const iconMapBuf = Buffer.concat(iconMapBufs)
+
+  // store colors
+  // [r (uint8), g (uint8), b (uint8), a (uint8), ...]
+  let colorLength = 0
+  let colorBuf = Buffer.alloc(0)
+  if ('colors' in map) {
+    const colorList = Buffer.from(map.colors.flatMap(color => [color.r, color.g, color.b, color.a]))
+    colorLength = colorList.length
+    colorBuf = Buffer.alloc(colorLength)
+    for (let i = 0; i < colorLength; i++) colorBuf.writeUInt8(colorList[i], i)
   }
 
   // build the metadata
@@ -179,13 +236,10 @@ export function serializeMetadata (db: Database, font: FontGlyphMap, multi: bool
   meta.writeUInt16LE(range, 6)
   meta.writeUInt16LE(defaultAdvance, 8)
   meta.writeUInt16LE(glyphCount, 10)
-  meta.writeUInt32LE(0, 12) // iconMapCount (unused in fonts)
-  meta.writeUInt16LE(0, 16) // colorCount (unused in fonts)
+  meta.writeUInt32LE(iconMapBuf.length, 12) // iconMapCount (unused in fonts)
+  meta.writeUInt16LE(colorLength / 4, 16) // colorCount (unused in fonts)
   meta.writeUint32LE(subsBuf.length, 18) // substituteCount
-  // TODO:
-  // meta.writeUInt32LE(iconMapBuf.length, 12)
-  // meta.writeUInt16LE(colorLength / 4, 16) // number of colors, 4 bytes each
-  const metaBuffer = Buffer.concat([meta, glyphMap, subsBuf])
+  const metaBuffer = Buffer.concat([meta, glyphMap, iconMapBuf, colorBuf, subsBuf])
   const data = bufferToBase64(metaBuffer)
 
   // Store metadata in sqlite database

@@ -1,5 +1,12 @@
+import { readFileSync } from 'fs'
+import Parser from 'fast-xml-parser'
 import parseSVG from 'svg-path-parser'
 import { parseColor } from './color'
+
+export interface SVG {
+  g: SVG
+  path: Path | Path[]
+}
 
 export interface Color { r: number, g: number, b: number, a: number }
 
@@ -12,11 +19,46 @@ export interface Path {
 }
 
 export interface ParsedPath {
+  index: number
   path: string
+  elements: any
   color: Color
 }
 
-export function parsePath (path: Path): ParsedPath | undefined {
+export function getSVGData (inputFile: string): ParsedPath[] {
+  const data = readFileSync(inputFile, 'utf8')
+  const parsedSVG = Parser.parse(data, { parseAttributeValue: true, ignoreAttributes: false, attributeNamePrefix: '' })
+  const { svg } = parsedSVG
+  const res: Array<ParsedPath | undefined> = []
+
+  const indexTracker = { index: 0 }
+  parseFeatures(svg, res, indexTracker)
+
+  return res.filter(f => f !== undefined) as ParsedPath[]
+}
+
+export function parseFeatures (
+  svg: SVG,
+  res: Array<ParsedPath | undefined>,
+  indexTracker: { index: number }
+): void {
+  for (const key in svg) {
+    if (key === 'path') {
+      const svgPaths = svg[key]
+      if (svgPaths !== undefined) { // multiple element objects
+        if (Array.isArray(svgPaths)) {
+          for (const element of svgPaths) res.push(parsePath(element, indexTracker))
+        } else {
+          res.push(parsePath(svgPaths, indexTracker))
+        }
+      }
+    } else if (key === 'g') {
+      parseFeatures(svg[key], res, indexTracker)
+    }
+  }
+}
+
+export function parsePath (path: Path, indexTracker: { index: number }): ParsedPath | undefined {
   if (path.style !== undefined) injectStyle(path, path.style)
   if (path.fill === undefined) return
   const color = parseColor(path.fill)
@@ -26,11 +68,16 @@ export function parsePath (path: Path): ParsedPath | undefined {
 
   const { d } = path
   // @ts-expect-error - svg-path-parser is not typed
-  const parsedPath = parseSVG(d) as string
+  const parsedPath = parseSVG(d)
   if (parsedPath === undefined) return
 
+  // take d and remove all spaces, tabs, newlines, etc. using expressions
+  const dClean = d.replace(/\s/g, '')
+
   return {
-    path: parsedPath,
+    index: indexTracker.index++,
+    path: dClean,
+    elements: parsedPath,
     color: { r, g, b, a }
   }
 }

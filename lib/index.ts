@@ -1,10 +1,19 @@
 import { convertGlyphsToSDF } from './convert'
-import { processFont } from './process'
-import { serializeFont } from './storage'
+import { processFont, processSVG, processImages } from './process'
+import { storeGlyphsToSQL } from './storage'
 
-import type { Options as FontOptions, FontGlyphMap } from './process/font'
-import type { Options as SDFOptions } from './convert/sdf'
-import type { Options as SQLiteOptions } from './storage/sql'
+import type {
+  FontOptions,
+  SVGOptions,
+  ImageOptions,
+  GlyphMap
+} from './process'
+import type {
+  SDFOptions
+} from './convert'
+import type {
+  SQLiteOptions
+} from './storage'
 
 export * from './convert'
 export * from './process'
@@ -13,22 +22,31 @@ export * from './binding'
 export * from './substitutionTable'
 
 export interface Options {
+  /** Name of the resultant product */
   name: string
-  processOptions: FontOptions
-  convertOptions: SDFOptions
+  /** Set true if you want to get a log of events. Defaults to false */
+  log?: boolean
+  /** Process options build and prep data of either font, svg, or an image */
+  processOptions: FontOptions | SVGOptions | ImageOptions
+  /** Convert options is not required if you're only using image data */
+  convertOptions?: SDFOptions
+  /** Store as an SQL DB, spritesheet image/json combo, or range table */
   storeOptions: SQLiteOptions
 }
 
 export async function generateGlyphs (options: Options): Promise<void> {
-  const { name, processOptions, convertOptions, storeOptions } = options
-  let fontGlyphMap: FontGlyphMap | undefined
+  const { name, processOptions, convertOptions, storeOptions, log } = options
+  let glyphMap: GlyphMap | undefined
   // 1) process data whether it be a font, image, or svg
-  if ('fontPaths' in processOptions) fontGlyphMap = await processFont(name, processOptions)
+  if ('fontPaths' in processOptions) glyphMap = await processFont(name, processOptions, log)
+  if ('svgFolder' in processOptions) glyphMap = processSVG(name, processOptions, log)
+  if ('imageFolder' in processOptions) glyphMap = await processImages(name, processOptions, log)
+  if (glyphMap === undefined) throw new Error('No glyphMap was created')
   // 2) convert glyphs to sdf, image, or vector as needed
-  if ('convertType' in convertOptions && fontGlyphMap !== undefined) convertGlyphsToSDF(fontGlyphMap, convertOptions)
-  // 3) store glyphs
-  if ('storeType' in storeOptions && storeOptions.storeType === 'SQL') {
-    if (fontGlyphMap !== undefined) serializeFont(name, fontGlyphMap, storeOptions)
+  if (convertOptions !== undefined) {
+    if ('convertType' in convertOptions) convertGlyphsToSDF(glyphMap, convertOptions, log)
   }
-  console.log('\ndone')
+  // 3) store glyphs
+  if (storeOptions.storeType === 'SQL') storeGlyphsToSQL(name, glyphMap, storeOptions, log)
+  console.info('\ndone')
 }

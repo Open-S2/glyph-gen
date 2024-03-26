@@ -1,4 +1,4 @@
-import type { SubstituteParsed, LigatureSubstituteParsed } from './process/font'
+import type { SubstituteParsed, LigatureSubstituteParsed } from 'process/index'
 
 export interface LigatureTree extends Record<number, LigatureTree> {
   /** unicode substitute if it ends here */

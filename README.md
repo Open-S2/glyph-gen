@@ -86,6 +86,7 @@ python3 tools/git-sync-deps
     cc="clang" cxx="clang++"
     is_official_build=true
     is_debug=false
+    target_os="mac"
     target_cpu="arm64"
     extra_cflags=[ "-fPIC", "-I/usr/local/include/freetype2" ]
     extra_cflags_cc=["-frtti"]
