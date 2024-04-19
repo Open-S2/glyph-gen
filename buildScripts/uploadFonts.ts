@@ -97,8 +97,3 @@ async function uploadGlyphs (name, code, data) {
       console.log('FAILED', err)
     })
 }
-
-// [[d1_databases]]
-// binding = "DB" # i.e. available in your Worker on env.DB
-// database_name = "GLYPHS_V2"
-// database_id = "02aa53f4-f07f-44dd-a5d8-90215d82d07b"
