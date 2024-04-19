@@ -3,9 +3,7 @@ const Database = require('better-sqlite3')
 const log = require('single-line-log').stdout
 const schema = fs.readFileSync(__dirname + '../lib/schema.sql', 'utf8')
 
-// const BASE = 'http://localhost:8789/v1'
 const BASE = 'http://localhost:8781'
-// const BASE = 'https://uploadglyphs.s2maps.workers.dev'
 
 const glyphs = getGlyphs()
 
